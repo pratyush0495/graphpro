@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- 🔥 PRIMARY SEO -->
+<title>Ultimate Graph Tool - Free Graph Plotter | CSV & Function Graph Generator</title>
+
+<meta name="description" content="Advanced free graph plotting tool. Create line, bar, scatter, and pie charts using values, CSV upload or math functions. Fast, powerful and easy to use.">
+<meta name="keywords" content="graph plotter, graph maker, csv graph tool, function graph, chart generator, online graph plotter, scatter plot online">
+<meta name="author" content="Pratyush Kumar">
+
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="googlebot" content="index, follow">
+
+<link rel="canonical" href="https://pratyush0495.github.io/graphpro/">
+
+<!-- 🔴 GOOGLE VERIFICATION -->
+<meta name="google-site-verification" content="PASTE_YOUR_CODE_HERE" />
+
+<!-- 🔥 OPEN GRAPH (SOCIAL) -->
+<meta property="og:title" content="Ultimate Graph Tool">
+<meta property="og:description" content="Plot graphs instantly using values, CSV or functions.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://pratyush0495.github.io/graphpro/">
+<meta property="og:image" content="https://cdn-icons-png.flaticon.com/512/1828/1828919.png">
+
+<!-- 🔥 TWITTER -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Ultimate Graph Tool">
+<meta name="twitter:description" content="Create graphs easily using CSV or functions">
+
+<!-- 🔥 FAVICON -->
+<link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1828/1828919.png">
+
+<!-- 🔥 PERFORMANCE -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+
+<!-- 🔥 CSS -->
+<link rel="stylesheet" href="style.css">
+
+<!-- 🔥 LIBRARIES -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+
+<!-- 🔥 STRUCTURED DATA (ADVANCED SEO) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Ultimate Graph Tool",
+  "url": "https://pratyush0495.github.io/graphpro/",
+  "description": "Advanced graph plotting tool with CSV upload and function plotting.",
+  "applicationCategory": "EducationalApplication",
+  "operatingSystem": "All",
+  "creator": {
+    "@type": "Person",
+    "name": "Pratyush Kumar"
+  }
+}
+</script>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="sidebar">
+
+<h2>Ultimate Graph Tool</h2>
+
+<select id="mode">
+<option value="data">Data Mode</option>
+<option value="function">Function Mode</option>
+</select>
+
+<div id="dataBox">
+<input id="xValues" placeholder="X: 1,2,3">
+<input id="yValues" placeholder="Y1: 2,4,6">
+<input id="y2Values" placeholder="Y2 (optional): 1,3,5">
+</div>
+
+<div id="funcBox" style="display:none;">
+<input id="func" placeholder="f(x) = x^2 + 2*x">
+</div>
+
+<select id="type">
+<option value="line">Line</option>
+<option value="bar">Bar</option>
+<option value="scatter">Scatter</option>
+<option value="pie">Pie</option>
+</select>
+
+<input id="title" placeholder="Graph Title">
+<input type="color" id="color1">
+<input type="color" id="color2">
+
+<button onclick="plot()">Plot</button>
+<button onclick="download()">Download</button>
+
+<h3>Upload CSV</h3>
+<input type="file" id="file">
+
+<h3>Insights</h3>
+<div id="insight"></div>
+
+</div>
+
+<div class="main">
+<canvas id="chart"></canvas>
+</div>
+
+</div>
+
+<!-- 🔥 SEO CONTENT (RANKING BOOST) -->
+<section style="padding:20px; max-width:900px; margin:auto;">
+
+<h2>Free Online Graph Plotter Tool</h2>
+<p>
+This tool helps you create graphs instantly using values, CSV files or mathematical functions.
+It is fast, simple and works directly in your browser.
+</p>
+
+<h2>Features</h2>
+<ul>
+<li>Line, bar, scatter and pie charts</li>
+<li>Function plotting</li>
+<li>CSV upload support</li>
+<li>Zoom and pan enabled</li>
+<li>Download graph as image</li>
+</ul>
+
+</section>
+
+<!-- 🔥 FOOTER -->
+<footer style="text-align:center; padding:15px; font-size:14px;">
+  Built by Pratyush
+</footer>
+
+<script src="script.js"></script>
+
+</body>
+</html>
