@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Ultimate Graph Tool | Graph Plotter with CSV & Function</title>
+
+<meta name="description" content="Free advanced graph plotter tool. Create line, bar, scatter graphs using values, functions or CSV upload instantly.">
+<meta name="keywords" content="graph plotter, graph maker, csv graph, function graph, chart generator">
+<meta name="author" content="Pratyush Kumar">
+
+<meta name="robots" content="index, follow">
+
+<link rel="canonical" href="https://pratyush0495.github.io/graphpro/">
+
+<!-- 🔴 PASTE YOUR GOOGLE CODE BELOW -->
+<meta name="google-site-verification" content="PASTE_YOUR_CODE_HERE" />
+
+<!-- Open Graph -->
+<meta property="og:title" content="Ultimate Graph Tool">
+<meta property="og:description" content="Create graphs using values, functions or CSV.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://pratyush0495.github.io/graphpro/">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+
+<!-- Favicon -->
+<link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1828/1828919.png">
+
+<!-- CSS -->
+<link rel="stylesheet" href="style.css">
+
+<!-- Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+
+<!-- Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Ultimate Graph Tool",
+  "url": "https://pratyush0495.github.io/graphpro/",
+  "description": "Advanced graph plotting tool with CSV and function support.",
+  "applicationCategory": "EducationalApplication",
+  "operatingSystem": "All"
+}
+</script>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- 🔥 SIDEBAR -->
+<div class="sidebar">
+
+<h2>Ultimate Graph Tool</h2>
+
+<select id="mode">
+<option value="data">Data Mode</option>
+<option value="function">Function Mode</option>
+</select>
+
+<div id="dataBox">
+<input id="xValues" placeholder="X: 1,2,3">
+<input id="yValues" placeholder="Y1: 2,4,6">
+<input id="y2Values" placeholder="Y2 (optional): 1,3,5">
+</div>
+
+<div id="funcBox" style="display:none;">
+<input id="func" placeholder="f(x) = x^2 + 2*x">
+</div>
+
+<select id="type">
+<option value="line">Line</option>
+<option value="bar">Bar</option>
+<option value="scatter">Scatter</option>
+<option value="pie">Pie</option>
+</select>
+
+<input id="title" placeholder="Graph Title">
+<input type="color" id="color1">
+<input type="color" id="color2">
+
+<button onclick="plot()">Plot</button>
+<button onclick="download()">Download</button>
+
+<h3>Upload CSV</h3>
+<input type="file" id="file">
+
+<h3>Insights</h3>
+<div id="insight"></div>
+
+</div>
+
+<!-- 🔥 MAIN -->
+<div class="main">
+<canvas id="chart"></canvas>
+</div>
+
+</div>
+
+<!-- 🔥 SEO CONTENT -->
+<section style="padding:20px; max-width:900px; margin:auto;">
+
+<h2>Free Online Graph Plotter Tool</h2>
+<p>
+This advanced graph plotting tool allows you to create professional graphs instantly using values,
+mathematical functions, or CSV file upload.
+</p>
+
+<h2>Features</h2>
+<ul>
+<li>Line, bar, scatter and pie charts</li>
+<li>Function plotting using math expressions</li>
+<li>CSV file upload support</li>
+<li>Zoom and pan enabled</li>
+<li>Download graph as image</li>
+</ul>
+
+<h2>Usage</h2>
+<p>
+Enter values or upload a CSV file, choose graph type and click plot to generate instant graphs.
+</p>
+
+</section>
+
+<script src="script.js"></script>
+
+</body>
+</html>
