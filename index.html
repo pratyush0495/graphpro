@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Ultimate Graph Tool</title>
+
+<link rel="stylesheet" href="style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="sidebar">
+
+<h2>Ultimate Graph Tool</h2>
+
+<select id="mode">
+<option value="data">Data Mode</option>
+<option value="function">Function Mode</option>
+</select>
+
+<div id="dataBox">
+<input id="xValues" placeholder="X: 1,2,3">
+<input id="yValues" placeholder="Y1: 2,4,6">
+<input id="y2Values" placeholder="Y2 (optional): 1,3,5">
+</div>
+
+<div id="funcBox" style="display:none;">
+<input id="func" placeholder="f(x) = x^2 + 2*x">
+</div>
+
+<select id="type">
+<option value="line">Line</option>
+<option value="bar">Bar</option>
+<option value="scatter">Scatter</option>
+<option value="pie">Pie</option>
+</select>
+
+<input id="title" placeholder="Graph Title">
+<input type="color" id="color1">
+<input type="color" id="color2">
+
+<button onclick="plot()">Plot</button>
+<button onclick="download()">Download</button>
+
+<h3>Upload CSV</h3>
+<input type="file" id="file">
+
+<h3>Insights</h3>
+<div id="insight"></div>
+
+</div>
+
+<div class="main">
+<canvas id="chart"></canvas>
+</div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
