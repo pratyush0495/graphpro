@@ -122,30 +122,48 @@ function plot() {
   // ================= PIE FIX =================
   if (type === "pie") {
 
-    // 🔥 CLEAR OLD CHART AREA
     let container = document.getElementById("chart").parentNode;
+
+    // 🔥 CLEAR
     container.innerHTML = "";
 
-    // ---------- Y1 PIE ----------
-    if (y1.length) {
-      let canvas1 = document.createElement("canvas");
-      container.appendChild(canvas1);
+    // 🔥 FLEX LAYOUT CONTROL (MAIN FIX)
+    container.style.display = "flex";
+    container.style.flexWrap = "wrap";
+    container.style.justifyContent = "center";
+    container.style.alignItems = "center";
+    container.style.gap = "20px";
 
-      new Chart(canvas1, {
+    function createPie(data, labelText) {
+
+      let wrapper = document.createElement("div");
+
+      // 🔥 SIZE CONTROL (IMPORTANT FIX)
+      wrapper.style.width = "300px";
+      wrapper.style.height = "300px";
+      wrapper.style.position = "relative";
+
+      let canvas = document.createElement("canvas");
+      wrapper.appendChild(canvas);
+      container.appendChild(wrapper);
+
+      new Chart(canvas, {
         type: "pie",
         data: {
-          labels: x.length === y1.length ? x : y1.map((_, i) => `Item ${i + 1}`),
+          labels: x.length === data.length ? x : data.map((_, i) => `Item ${i + 1}`),
           datasets: [{
-            data: y1,
-            backgroundColor: generateColors(y1.length)
+            data: data,
+            backgroundColor: generateColors(data.length)
           }]
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
+
           plugins: {
             title: {
               display: true,
-              text: graphTitle + " (Y1)"
+              text: graphTitle + " (" + labelText + ")"
             },
             legend: { position: "bottom" }
           }
@@ -154,33 +172,9 @@ function plot() {
       });
     }
 
-    // ---------- Y2 PIE ----------
-    if (y2.length) {
-      let canvas2 = document.createElement("canvas");
-      container.appendChild(canvas2);
-
-      new Chart(canvas2, {
-        type: "pie",
-        data: {
-          labels: x.length === y2.length ? x : y2.map((_, i) => `Item ${i + 1}`),
-          datasets: [{
-            data: y2,
-            backgroundColor: generateColors(y2.length)
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            title: {
-              display: true,
-              text: graphTitle + " (Y2)"
-            },
-            legend: { position: "bottom" }
-          }
-        },
-        plugins: [pieLabelPlugin]
-      });
-    }
+    // ✅ ONLY CREATE IF DATA EXISTS (EMPTY SPACE FIX)
+    if (y1.length) createPie(y1, "Y1");
+    if (y2.length) createPie(y2, "Y2");
 
     analyze(y1);
     return;
