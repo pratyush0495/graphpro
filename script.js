@@ -1,5 +1,14 @@
 let chart;
 
+// ✅ PIE COLORS FIX
+function generateColors(n) {
+  let colors = [];
+  for (let i = 0; i < n; i++) {
+    colors.push(`hsl(${(i * 360) / n}, 70%, 60%)`);
+  }
+  return colors;
+}
+
 // ---------- MODE SWITCH ----------
 document.getElementById("mode").onchange = function () {
   let m = this.value;
@@ -8,23 +17,7 @@ document.getElementById("mode").onchange = function () {
   document.getElementById("funcBox").style.display = m === "function" ? "block" : "none";
 
   document.getElementById("color2Box").style.display = m === "function" ? "none" : "block";
-
-  document.getElementById("color1Label").innerText = "Y1 Color";
-  document.getElementById("color2Label").innerText = "Y2 Color";
 };
-
-// ✅ AUTO HIDE Y2 WHEN EMPTY
-document.getElementById("y2Values").addEventListener("input", function () {
-  let val = this.value.trim();
-
-  if (val === "") {
-    document.getElementById("color2Box").style.display = "none";
-  } else {
-    if (document.getElementById("mode").value === "data") {
-      document.getElementById("color2Box").style.display = "block";
-    }
-  }
-});
 
 // ---------- CSV ----------
 document.getElementById("file").addEventListener("change", function () {
@@ -50,20 +43,6 @@ document.getElementById("file").addEventListener("change", function () {
   reader.readAsText(file);
 });
 
-// ---------- STEP FUNCTION ----------
-function buildStepData(x, y) {
-  let stepPoints = [];
-
-  for (let i = 0; i < x.length - 1; i++) {
-    stepPoints.push({ x: x[i], y: y[i] });
-    stepPoints.push({ x: x[i + 1], y: y[i] });
-  }
-
-  stepPoints.push({ x: x[x.length - 1], y: y[y.length - 1] });
-
-  return stepPoints;
-}
-
 // ---------- MAIN ----------
 function plot() {
 
@@ -84,11 +63,7 @@ function plot() {
 
     expr = expr
       .replace(/\|x\|/g, "abs(x)")
-      .replace(/\[x\]/g, "floor(x)")
-      .replace(/sgn\(x\)/g, "sign(x)")
-      .replace(/sinx/g, "sin(x)")
-      .replace(/cosx/g, "cos(x)")
-      .replace(/tanx/g, "tan(x)");
+      .replace(/\[x\]/g, "floor(x)");
 
     if (type === "pie") {
       alert("Pie not supported");
@@ -99,10 +74,8 @@ function plot() {
       try {
         let val = math.evaluate(expr, { x: i });
         if (!isFinite(val)) continue;
-
         x.push(i);
         y1.push(val);
-
       } catch {
         alert("Invalid function");
         return;
@@ -114,24 +87,15 @@ function plot() {
 
   let datasets = [];
 
-  let isStep = document.getElementById("func").value.includes("[x]") || 
-               document.getElementById("func").value.includes("floor");
+  // ✅ PIE FIX (size + colors)
+  if (type === "pie") {
+    datasets = [{
+      data: y1,
+      backgroundColor: generateColors(y1.length)
+    }];
+  }
 
-  if (type === "line" && isStep) {
-
-    let stepData = buildStepData(x, y1);
-
-    datasets.push({
-      label: "Y1",
-      data: stepData,
-      parsing: false,
-      borderColor: document.getElementById("color1").value,
-      borderWidth: 2,
-      stepped: true,
-      pointRadius: 0
-    });
-
-  } else {
+  else {
 
     datasets.push({
       label: "Y1",
@@ -139,41 +103,49 @@ function plot() {
         ? x.map((v, i) => ({ x: v, y: y1[i] }))
         : y1,
       borderColor: document.getElementById("color1").value,
-      backgroundColor: document.getElementById("color1").value,
-      borderWidth: 2,
-      tension: mode === "function" ? 0.4 : 0
+      backgroundColor: document.getElementById("color1").value
     });
-  }
 
-  if (mode === "data" && y2.length === y1.length && y2.some(v => !isNaN(v))) {
-    datasets.push({
-      label: "Y2",
-      data: type === "scatter"
-        ? x.map((v, i) => ({ x: v, y: y2[i] }))
-        : y2,
-      borderColor: document.getElementById("color2").value,
-      backgroundColor: document.getElementById("color2").value,
-      borderWidth: 2,
-      tension: 0
-    });
+    if (mode === "data" && y2.length === y1.length && y2.some(v => !isNaN(v))) {
+      datasets.push({
+        label: "Y2",
+        data: type === "scatter"
+          ? x.map((v, i) => ({ x: v, y: y2[i] }))
+          : y2,
+        borderColor: document.getElementById("color2").value,
+        backgroundColor: document.getElementById("color2").value
+      });
+    }
   }
 
   chart = new Chart(document.getElementById("chart"), {
-    type: type,
+    type: type === "pie" ? "pie" : type,
     data: {
       labels: type === "scatter" ? undefined : x,
       datasets: datasets
     },
     options: {
+      responsive: true,
+      maintainAspectRatio: false, // ✅ FIX PIE SIZE ISSUE
+
       plugins: {
         title: {
           display: graphTitle !== "",
           text: graphTitle
+        },
+
+        // ✅ ZOOM FIX
+        zoom: type === "pie" ? {} : {
+          zoom: {
+            wheel: { enabled: true },
+            pinch: { enabled: true },
+            mode: 'xy'
+          },
+          pan: {
+            enabled: true,
+            mode: 'xy'
+          }
         }
-      },
-      scales: type === "pie" ? {} : {
-        x: { title: { display: true, text: "X" } },
-        y: { title: { display: true, text: "Y" } }
       }
     }
   });
