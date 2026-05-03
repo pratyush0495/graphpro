@@ -77,27 +77,24 @@ document.getElementById("file").addEventListener("change", function () {
   };
 
   reader.readAsText(file);
-});
+};
 
-// ---------- FUNCTION HELPER (NEW CORE ADDITION) ----------
+// ---------- 🔥 FUNCTION PREPROCESS (ONLY ADDITION) ----------
 function preprocessFunction(expr) {
-
   return expr
-    // modulus |x|
-    .replace(/\|x\|/g, "abs(x)")
+    .replace(/\|x\|/g, "abs(x)")          // modulus
+    .replace(/\[x\]/g, "floor(x)")        // GIF
+    .replace(/sgn\(/g, "sign(")           // signum
 
-    // greatest integer [x]
-    .replace(/\[x\]/g, "floor(x)")
+    // mod function
+    .replace(/mod\((.*?),(.*?)\)/g, "($1 % $2)")
 
-    // signum
-    .replace(/sgn\(/g, "sign(")
-
-    // trig DEGREE SUPPORT
+    // trig (degree → radian)
     .replace(/sin\((.*?)\)/g, "sin(($1)*pi/180)")
     .replace(/cos\((.*?)\)/g, "cos(($1)*pi/180)")
     .replace(/tan\((.*?)\)/g, "tan(($1)*pi/180)")
 
-    // inverse trig
+    // inverse trig (output degree)
     .replace(/asin\((.*?)\)/g, "(asin($1)*180/pi)")
     .replace(/acos\((.*?)\)/g, "(acos($1)*180/pi)")
     .replace(/atan\((.*?)\)/g, "(atan($1)*180/pi)")
@@ -105,10 +102,7 @@ function preprocessFunction(expr) {
     // extra trig
     .replace(/sec\((.*?)\)/g, "(1/cos(($1)*pi/180))")
     .replace(/cosec\((.*?)\)/g, "(1/sin(($1)*pi/180))")
-    .replace(/cot\((.*?)\)/g, "(1/tan(($1)*pi/180))")
-
-    // mod function
-    .replace(/mod\((.*?),(.*?)\)/g, "($1 % $2)");
+    .replace(/cot\((.*?)\)/g, "(1/tan(($1)*pi/180))");
 }
 
 // ---------- MAIN ----------
@@ -129,26 +123,19 @@ function plot() {
   else {
     let expr = document.getElementById("func").value;
 
-    expr = preprocessFunction(expr); // 🔥 MAIN UPGRADE
+    expr = preprocessFunction(expr); // 🔥 ONLY ADDITION HERE
 
     if (type === "pie") {
       alert("Pie not supported");
       return;
     }
 
-    for (let i = -360; i <= 360; i += 1) { // 🔥 better range for trig
+    for (let i = -20; i <= 20; i += 0.1) {
       try {
         let val = math.evaluate(expr, { x: i });
-
-        if (!isFinite(val) || Math.abs(val) > 1e4) {
-          x.push(i);
-          y1.push(null); // 🔥 break graph (important)
-          continue;
-        }
-
+        if (!isFinite(val)) continue;
         x.push(i);
         y1.push(val);
-
       } catch {
         alert("Invalid function");
         return;
@@ -160,82 +147,147 @@ function plot() {
 
   let datasets = [];
 
-  // ---------- OTHER CHARTS ----------
-  datasets.push({
-    label: "Y1",
-    data: type === "scatter"
-      ? x.map((v, i) => ({ x: v, y: y1[i] }))
-      : y1,
-    borderColor: document.getElementById("color1").value,
-    backgroundColor: document.getElementById("color1").value,
-    spanGaps: false // 🔥 important for tan/sec
-  });
+  // ================= PIE FIX =================
+  if (type === "pie") {
 
-  if (mode === "data" && y2.length === y1.length && y2.some(v => !isNaN(v))) {
-    datasets.push({
-      label: "Y2",
-      data: type === "scatter"
-        ? x.map((v, i) => ({ x: v, y: y2[i] }))
-        : y2,
-      borderColor: document.getElementById("color2").value,
-      backgroundColor: document.getElementById("color2").value
-    });
+    let container = document.getElementById("chart").parentNode;
+
+    container.innerHTML = "";
+
+    let chartCount = 0;
+    if (y1.length) chartCount++;
+    if (y2.length && y2.some(v => !isNaN(v))) chartCount++;
+
+    container.style.display = "grid";
+    container.style.justifyContent = "center";
+    container.style.gap = "20px";
+
+    if (chartCount === 1) {
+      container.style.gridTemplateColumns = "300px";
+    } else {
+      container.style.gridTemplateColumns = "repeat(2, 300px)";
+    }
+
+    function createPie(data, labelText) {
+
+      let cleanData = data.filter(v => !isNaN(v) && v !== 0);
+      if (!cleanData.length) return;
+
+      let wrapper = document.createElement("div");
+      wrapper.style.width = "300px";
+      wrapper.style.height = "300px";
+      wrapper.style.position = "relative";
+
+      let canvas = document.createElement("canvas");
+      wrapper.appendChild(canvas);
+      container.appendChild(wrapper);
+
+      new Chart(canvas, {
+        type: "pie",
+        data: {
+          labels: x.length === data.length
+            ? x
+            : cleanData.map((_, i) => `Item ${i + 1}`),
+          datasets: [{
+            data: cleanData,
+            backgroundColor: generateColors(cleanData.length)
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: {
+              display: true,
+              text: graphTitle + " (" + labelText + ")"
+            },
+            legend: { position: "bottom" }
+          }
+        },
+        plugins: [pieLabelPlugin]
+      });
+    }
+
+    if (y1.length) createPie(y1, "Y1");
+    if (y2.length && y2.some(v => !isNaN(v))) createPie(y2, "Y2");
+
+    analyze(y1);
+    return;
   }
 
-  chart = new Chart(document.getElementById("chart"), {
-    type: type,
-    data: {
-      labels: type === "scatter" ? undefined : x,
-      datasets: datasets
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
+  // ---------- OTHER CHARTS ----------
+  else {
 
-      scales: {
-        x: {
-          display: true,
-          title: { display: true, text: "X Axis (Degree)" }
-        },
-        y: {
-          display: true,
-          title: { display: true, text: "Y Axis" }
-        }
+    datasets.push({
+      label: "Y1",
+      data: type === "scatter"
+        ? x.map((v, i) => ({ x: v, y: y1[i] }))
+        : y1,
+      borderColor: document.getElementById("color1").value,
+      backgroundColor: document.getElementById("color1").value
+    });
+
+    if (mode === "data" && y2.length === y1.length && y2.some(v => !isNaN(v))) {
+      datasets.push({
+        label: "Y2",
+        data: type === "scatter"
+          ? x.map((v, i) => ({ x: v, y: y2[i] }))
+          : y2,
+        borderColor: document.getElementById("color2").value,
+        backgroundColor: document.getElementById("color2").value
+      });
+    }
+
+    chart = new Chart(document.getElementById("chart"), {
+      type: type,
+      data: {
+        labels: type === "scatter" ? undefined : x,
+        datasets: datasets
       },
-
-      plugins: {
-        title: {
-          display: graphTitle !== "",
-          text: graphTitle
-        },
-
-        zoom: {
-          zoom: {
-            wheel: { enabled: true },
-            pinch: { enabled: true },
-            mode: 'xy'
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            display: true,
+            title: { display: true, text: "X Axis" }
           },
-          pan: {
-            enabled: true,
-            mode: 'xy'
+          y: {
+            display: true,
+            title: { display: true, text: "Y Axis" }
+          }
+        },
+        plugins: {
+          title: {
+            display: graphTitle !== "",
+            text: graphTitle
+          },
+          zoom: {
+            zoom: {
+              wheel: { enabled: true },
+              pinch: { enabled: true },
+              mode: 'xy'
+            },
+            pan: {
+              enabled: true,
+              mode: 'xy'
+            }
           }
         }
       }
-    }
-  });
+    });
 
-  analyze(y1);
+    analyze(y1);
+  }
 }
 
 // ---------- ANALYSIS ----------
 function analyze(y) {
   if (!y.length) return;
 
-  let clean = y.filter(v => v !== null);
-
-  let max = Math.max(...clean);
-  let min = Math.min(...clean);
-  let avg = (clean.reduce((a, b) => a + b, 0) / clean.length).toFixed(2);
+  let max = Math.max(...y);
+  let min = Math.min(...y);
+  let avg = (y.reduce((a, b) => a + b, 0) / y.length).toFixed(2);
 
   document.getElementById("insight").innerHTML =
     `Max: ${max}<br>Min: ${min}<br>Avg: ${avg}`;
