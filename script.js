@@ -9,7 +9,7 @@ function generateColors(n) {
   return colors;
 }
 
-// ✅ SMART LABEL DRAW
+// ✅ SMART LABEL DRAW (IMPROVED)
 const pieLabelPlugin = {
   id: "pieLabelPlugin",
   afterDatasetsDraw(chart) {
@@ -26,10 +26,14 @@ const pieLabelPlugin = {
     meta.data.forEach((arc, i) => {
       let value = chart.data.datasets[0].data[i];
 
+      if (value === 0 || isNaN(value)) return;
+
       let angle = (arc.startAngle + arc.endAngle) / 2;
       let radius = arc.outerRadius;
 
-      let distance = (arc.circumference > 0.5) ? radius * 0.6 : radius * 1.1;
+      let isBigSlice = arc.circumference > 0.4;
+
+      let distance = isBigSlice ? radius * 0.6 : radius * 1.15;
 
       let x = arc.x + Math.cos(angle) * distance;
       let y = arc.y + Math.sin(angle) * distance;
@@ -127,18 +131,29 @@ function plot() {
     // 🔥 CLEAR
     container.innerHTML = "";
 
-    // 🔥 FLEX LAYOUT CONTROL (MAIN FIX)
-    container.style.display = "flex";
-    container.style.flexWrap = "wrap";
+    // 🔥 DYNAMIC GRID (FIXED EMPTY SPACE + OVERLAP)
+    let chartCount = 0;
+    if (y1.length) chartCount++;
+    if (y2.length && y2.some(v => !isNaN(v))) chartCount++;
+
+    container.style.display = "grid";
     container.style.justifyContent = "center";
-    container.style.alignItems = "center";
     container.style.gap = "20px";
+
+    if (chartCount === 1) {
+      container.style.gridTemplateColumns = "300px";
+    } else {
+      container.style.gridTemplateColumns = "repeat(2, 300px)";
+    }
 
     function createPie(data, labelText) {
 
+      let cleanData = data.filter(v => !isNaN(v) && v !== 0);
+
+      if (!cleanData.length) return;
+
       let wrapper = document.createElement("div");
 
-      // 🔥 SIZE CONTROL (IMPORTANT FIX)
       wrapper.style.width = "300px";
       wrapper.style.height = "300px";
       wrapper.style.position = "relative";
@@ -150,10 +165,13 @@ function plot() {
       new Chart(canvas, {
         type: "pie",
         data: {
-          labels: x.length === data.length ? x : data.map((_, i) => `Item ${i + 1}`),
+          labels: x.length === data.length
+            ? x
+            : cleanData.map((_, i) => `Item ${i + 1}`),
+
           datasets: [{
-            data: data,
-            backgroundColor: generateColors(data.length)
+            data: cleanData,
+            backgroundColor: generateColors(cleanData.length)
           }]
         },
         options: {
@@ -172,9 +190,11 @@ function plot() {
       });
     }
 
-    // ✅ ONLY CREATE IF DATA EXISTS (EMPTY SPACE FIX)
     if (y1.length) createPie(y1, "Y1");
-    if (y2.length) createPie(y2, "Y2");
+
+    if (y2.length && y2.some(v => !isNaN(v))) {
+      createPie(y2, "Y2");
+    }
 
     analyze(y1);
     return;
