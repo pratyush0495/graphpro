@@ -29,7 +29,6 @@ const pieLabelPlugin = {
       let angle = (arc.startAngle + arc.endAngle) / 2;
       let radius = arc.outerRadius;
 
-      // ✅ BIG slice → inside, small → outside
       let distance = (arc.circumference > 0.5) ? radius * 0.6 : radius * 1.1;
 
       let x = arc.x + Math.cos(angle) * distance;
@@ -120,21 +119,23 @@ function plot() {
 
   let datasets = [];
 
-  // ✅ FIX 1: PROPER PIE DATA (NO MORE WRONG SLICES)
+  // ✅ FIXED PIE (Y1 + Y2 BOTH)
   if (type === "pie") {
 
-    let labels = [];
     let data = [];
+    let labels = [];
 
-    // 🔥 IMPORTANT FIX:
-    // Always use Y1 as slice values
-    data = y1;
+    // 🔥 Merge Y1 + Y2 into slices
+    y1.forEach((v, i) => {
+      data.push(v);
+      labels.push(`Y1-${x[i] ?? i}`);
+    });
 
-    // Labels should match values length
-    if (x.length === y1.length) {
-      labels = x;
-    } else {
-      labels = y1.map((_, i) => `Item ${i + 1}`);
+    if (y2.length === y1.length && y2.some(v => !isNaN(v))) {
+      y2.forEach((v, i) => {
+        data.push(v);
+        labels.push(`Y2-${x[i] ?? i}`);
+      });
     }
 
     datasets = [{
@@ -157,20 +158,15 @@ function plot() {
             display: graphTitle !== "",
             text: graphTitle
           },
-
           legend: {
             position: "bottom"
-          },
-
-          tooltip: {
-            enabled: true
           }
         }
       },
-      plugins: [pieLabelPlugin] // ✅ ADD LABEL PLUGIN
+      plugins: [pieLabelPlugin]
     });
 
-    analyze(y1);
+    analyze(data);
     return;
   }
 
@@ -222,6 +218,22 @@ function plot() {
             pan: {
               enabled: true,
               mode: 'xy'
+            }
+          }
+        },
+
+        // ✅ AXIS LABELS BACK
+        scales: type === "pie" ? {} : {
+          x: {
+            title: {
+              display: true,
+              text: "X Axis"
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: "Y Axis"
             }
           }
         }
