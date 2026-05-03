@@ -32,7 +32,6 @@ const pieLabelPlugin = {
       let radius = arc.outerRadius;
 
       let isBigSlice = arc.circumference > 0.4;
-
       let distance = isBigSlice ? radius * 0.6 : radius * 1.15;
 
       let x = arc.x + Math.cos(angle) * distance;
@@ -77,33 +76,7 @@ document.getElementById("file").addEventListener("change", function () {
   };
 
   reader.readAsText(file);
-};
-
-// ---------- 🔥 FUNCTION PREPROCESS (ONLY ADDITION) ----------
-function preprocessFunction(expr) {
-  return expr
-    .replace(/\|x\|/g, "abs(x)")          // modulus
-    .replace(/\[x\]/g, "floor(x)")        // GIF
-    .replace(/sgn\(/g, "sign(")           // signum
-
-    // mod function
-    .replace(/mod\((.*?),(.*?)\)/g, "($1 % $2)")
-
-    // trig (degree → radian)
-    .replace(/sin\((.*?)\)/g, "sin(($1)*pi/180)")
-    .replace(/cos\((.*?)\)/g, "cos(($1)*pi/180)")
-    .replace(/tan\((.*?)\)/g, "tan(($1)*pi/180)")
-
-    // inverse trig (output degree)
-    .replace(/asin\((.*?)\)/g, "(asin($1)*180/pi)")
-    .replace(/acos\((.*?)\)/g, "(acos($1)*180/pi)")
-    .replace(/atan\((.*?)\)/g, "(atan($1)*180/pi)")
-
-    // extra trig
-    .replace(/sec\((.*?)\)/g, "(1/cos(($1)*pi/180))")
-    .replace(/cosec\((.*?)\)/g, "(1/sin(($1)*pi/180))")
-    .replace(/cot\((.*?)\)/g, "(1/tan(($1)*pi/180))");
-}
+});
 
 // ---------- MAIN ----------
 function plot() {
@@ -120,10 +93,23 @@ function plot() {
     y2 = document.getElementById("y2Values").value.split(",").map(Number).filter(n => !isNaN(n));
   }
 
+  // ---------- FUNCTION MODE (FIXED & UPGRADED) ----------
   else {
     let expr = document.getElementById("func").value;
 
-    expr = preprocessFunction(expr); // 🔥 ONLY ADDITION HERE
+    // ✅ BASIC CLEANING
+    expr = expr
+      .replace(/\|x\|/g, "abs(x)")
+      .replace(/\^/g, "**");
+
+    // ✅ MOD FUNCTION SUPPORT: mod(a,b)
+    expr = expr.replace(/mod\(([^,]+),([^)]+)\)/g, "($1 % $2)");
+
+    // ✅ SIGNUM SUPPORT: sign(x)
+    expr = expr.replace(/sign\(/g, "Math.sign(");
+
+    // ✅ GREATER INTEGER FUNCTION
+    expr = expr.replace(/floor\(/g, "Math.floor(");
 
     if (type === "pie") {
       alert("Pie not supported");
@@ -132,8 +118,21 @@ function plot() {
 
     for (let i = -20; i <= 20; i += 0.1) {
       try {
-        let val = math.evaluate(expr, { x: i });
+        let val = math.evaluate(expr, {
+          x: i,
+          sin: Math.sin,
+          cos: Math.cos,
+          tan: Math.tan,
+          abs: Math.abs,
+          sqrt: Math.sqrt,
+          log: Math.log,
+          exp: Math.exp,
+          sign: Math.sign,
+          floor: Math.floor
+        });
+
         if (!isFinite(val)) continue;
+
         x.push(i);
         y1.push(val);
       } catch {
@@ -151,7 +150,6 @@ function plot() {
   if (type === "pie") {
 
     let container = document.getElementById("chart").parentNode;
-
     container.innerHTML = "";
 
     let chartCount = 0;
@@ -188,6 +186,7 @@ function plot() {
           labels: x.length === data.length
             ? x
             : cleanData.map((_, i) => `Item ${i + 1}`),
+
           datasets: [{
             data: cleanData,
             backgroundColor: generateColors(cleanData.length)
@@ -209,7 +208,10 @@ function plot() {
     }
 
     if (y1.length) createPie(y1, "Y1");
-    if (y2.length && y2.some(v => !isNaN(v))) createPie(y2, "Y2");
+
+    if (y2.length && y2.some(v => !isNaN(v))) {
+      createPie(y2, "Y2");
+    }
 
     analyze(y1);
     return;
@@ -247,6 +249,7 @@ function plot() {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+
         scales: {
           x: {
             display: true,
@@ -257,11 +260,13 @@ function plot() {
             title: { display: true, text: "Y Axis" }
           }
         },
+
         plugins: {
           title: {
             display: graphTitle !== "",
             text: graphTitle
           },
+
           zoom: {
             zoom: {
               wheel: { enabled: true },
