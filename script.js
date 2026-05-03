@@ -32,6 +32,7 @@ const pieLabelPlugin = {
       let radius = arc.outerRadius;
 
       let isBigSlice = arc.circumference > 0.4;
+
       let distance = isBigSlice ? radius * 0.6 : radius * 1.15;
 
       let x = arc.x + Math.cos(angle) * distance;
@@ -93,23 +94,12 @@ function plot() {
     y2 = document.getElementById("y2Values").value.split(",").map(Number).filter(n => !isNaN(n));
   }
 
-  // ---------- FUNCTION MODE (FIXED & UPGRADED) ----------
   else {
     let expr = document.getElementById("func").value;
 
-    // ✅ BASIC CLEANING
     expr = expr
       .replace(/\|x\|/g, "abs(x)")
-      .replace(/\^/g, "**");
-
-    // ✅ MOD FUNCTION SUPPORT: mod(a,b)
-    expr = expr.replace(/mod\(([^,]+),([^)]+)\)/g, "($1 % $2)");
-
-    // ✅ SIGNUM SUPPORT: sign(x)
-    expr = expr.replace(/sign\(/g, "Math.sign(");
-
-    // ✅ GREATER INTEGER FUNCTION
-    expr = expr.replace(/floor\(/g, "Math.floor(");
+      .replace(/\[x\]/g, "floor(x)");
 
     if (type === "pie") {
       alert("Pie not supported");
@@ -118,21 +108,8 @@ function plot() {
 
     for (let i = -20; i <= 20; i += 0.1) {
       try {
-        let val = math.evaluate(expr, {
-          x: i,
-          sin: Math.sin,
-          cos: Math.cos,
-          tan: Math.tan,
-          abs: Math.abs,
-          sqrt: Math.sqrt,
-          log: Math.log,
-          exp: Math.exp,
-          sign: Math.sign,
-          floor: Math.floor
-        });
-
+        let val = math.evaluate(expr, { x: i });
         if (!isFinite(val)) continue;
-
         x.push(i);
         y1.push(val);
       } catch {
@@ -150,8 +127,11 @@ function plot() {
   if (type === "pie") {
 
     let container = document.getElementById("chart").parentNode;
+
+    // 🔥 CLEAR
     container.innerHTML = "";
 
+    // 🔥 DYNAMIC GRID (FIXED EMPTY SPACE + OVERLAP)
     let chartCount = 0;
     if (y1.length) chartCount++;
     if (y2.length && y2.some(v => !isNaN(v))) chartCount++;
@@ -169,9 +149,11 @@ function plot() {
     function createPie(data, labelText) {
 
       let cleanData = data.filter(v => !isNaN(v) && v !== 0);
+
       if (!cleanData.length) return;
 
       let wrapper = document.createElement("div");
+
       wrapper.style.width = "300px";
       wrapper.style.height = "300px";
       wrapper.style.position = "relative";
@@ -195,6 +177,7 @@ function plot() {
         options: {
           responsive: true,
           maintainAspectRatio: false,
+
           plugins: {
             title: {
               display: true,
