@@ -87,14 +87,74 @@ function plot() {
 
   let datasets = [];
 
-  // ✅ PIE FIX (size + colors)
+  // ✅ PIE FIX (MULTI VALUES + LABELS)
   if (type === "pie") {
+
+    // 🔥 FIX 1: Ensure all slices visible
+    let labels = x.length === y1.length ? x : y1.map((_, i) => `Value ${i+1}`);
+
     datasets = [{
       data: y1,
       backgroundColor: generateColors(y1.length)
     }];
+
+    chart = new Chart(document.getElementById("chart"), {
+      type: "pie",
+      data: {
+        labels: labels,
+        datasets: datasets
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+
+        plugins: {
+          title: {
+            display: graphTitle !== "",
+            text: graphTitle
+          },
+
+          legend: {
+            position: "bottom"
+          },
+
+          // 🔥 FIX 2: SHOW VALUES ON SLICES (INSIDE/OUTSIDE)
+          tooltip: {
+            enabled: true
+          }
+        }
+      },
+
+      // 🔥 CUSTOM DRAW LABELS
+      plugins: [{
+        id: "sliceLabels",
+        afterDraw(chart) {
+          const { ctx } = chart;
+          const meta = chart.getDatasetMeta(0);
+
+          ctx.save();
+          ctx.font = "12px Arial";
+          ctx.fillStyle = "#000";
+          ctx.textAlign = "center";
+
+          meta.data.forEach((slice, i) => {
+            let val = chart.data.datasets[0].data[i];
+
+            let pos = slice.tooltipPosition();
+
+            ctx.fillText(val, pos.x, pos.y);
+          });
+
+          ctx.restore();
+        }
+      }]
+    });
+
+    analyze(y1);
+    return;
   }
 
+  // ---------- OTHER CHARTS ----------
   else {
 
     datasets.push({
@@ -116,41 +176,40 @@ function plot() {
         backgroundColor: document.getElementById("color2").value
       });
     }
-  }
 
-  chart = new Chart(document.getElementById("chart"), {
-    type: type === "pie" ? "pie" : type,
-    data: {
-      labels: type === "scatter" ? undefined : x,
-      datasets: datasets
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false, // ✅ FIX PIE SIZE ISSUE
+    chart = new Chart(document.getElementById("chart"), {
+      type: type,
+      data: {
+        labels: type === "scatter" ? undefined : x,
+        datasets: datasets
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
 
-      plugins: {
-        title: {
-          display: graphTitle !== "",
-          text: graphTitle
-        },
-
-        // ✅ ZOOM FIX
-        zoom: type === "pie" ? {} : {
-          zoom: {
-            wheel: { enabled: true },
-            pinch: { enabled: true },
-            mode: 'xy'
+        plugins: {
+          title: {
+            display: graphTitle !== "",
+            text: graphTitle
           },
-          pan: {
-            enabled: true,
-            mode: 'xy'
+
+          zoom: {
+            zoom: {
+              wheel: { enabled: true },
+              pinch: { enabled: true },
+              mode: 'xy'
+            },
+            pan: {
+              enabled: true,
+              mode: 'xy'
+            }
           }
         }
       }
-    }
-  });
+    });
 
-  analyze(y1);
+    analyze(y1);
+  }
 }
 
 // ---------- ANALYSIS ----------
