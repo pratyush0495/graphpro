@@ -9,6 +9,39 @@ function generateColors(n) {
   return colors;
 }
 
+// ✅ NEW: SMART LABEL DRAW (INSIDE / OUTSIDE)
+const pieLabelPlugin = {
+  id: "pieLabelPlugin",
+  afterDatasetsDraw(chart) {
+    if (chart.config.type !== "pie") return;
+
+    const { ctx } = chart;
+    const meta = chart.getDatasetMeta(0);
+
+    ctx.save();
+    ctx.font = "12px Arial";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#000";
+
+    meta.data.forEach((arc, i) => {
+      let value = chart.data.datasets[0].data[i];
+
+      let angle = (arc.startAngle + arc.endAngle) / 2;
+      let radius = arc.outerRadius;
+
+      // ✅ BIG slice → inside, small → outside
+      let distance = (arc.circumference > 0.5) ? radius * 0.6 : radius * 1.1;
+
+      let x = arc.x + Math.cos(angle) * distance;
+      let y = arc.y + Math.sin(angle) * distance;
+
+      ctx.fillText(value, x, y);
+    });
+
+    ctx.restore();
+  }
+};
+
 // ---------- MODE SWITCH ----------
 document.getElementById("mode").onchange = function () {
   let m = this.value;
@@ -87,15 +120,26 @@ function plot() {
 
   let datasets = [];
 
-  // ✅ PIE FIX (MULTI VALUES + LABELS)
+  // ✅ FIX 1: PROPER PIE DATA (NO MORE WRONG SLICES)
   if (type === "pie") {
 
-    // 🔥 FIX 1: Ensure all slices visible
-    let labels = x.length === y1.length ? x : y1.map((_, i) => `Value ${i+1}`);
+    let labels = [];
+    let data = [];
+
+    // 🔥 IMPORTANT FIX:
+    // Always use Y1 as slice values
+    data = y1;
+
+    // Labels should match values length
+    if (x.length === y1.length) {
+      labels = x;
+    } else {
+      labels = y1.map((_, i) => `Item ${i + 1}`);
+    }
 
     datasets = [{
-      data: y1,
-      backgroundColor: generateColors(y1.length)
+      data: data,
+      backgroundColor: generateColors(data.length)
     }];
 
     chart = new Chart(document.getElementById("chart"), {
@@ -118,36 +162,12 @@ function plot() {
             position: "bottom"
           },
 
-          // 🔥 FIX 2: SHOW VALUES ON SLICES (INSIDE/OUTSIDE)
           tooltip: {
             enabled: true
           }
         }
       },
-
-      // 🔥 CUSTOM DRAW LABELS
-      plugins: [{
-        id: "sliceLabels",
-        afterDraw(chart) {
-          const { ctx } = chart;
-          const meta = chart.getDatasetMeta(0);
-
-          ctx.save();
-          ctx.font = "12px Arial";
-          ctx.fillStyle = "#000";
-          ctx.textAlign = "center";
-
-          meta.data.forEach((slice, i) => {
-            let val = chart.data.datasets[0].data[i];
-
-            let pos = slice.tooltipPosition();
-
-            ctx.fillText(val, pos.x, pos.y);
-          });
-
-          ctx.restore();
-        }
-      }]
+      plugins: [pieLabelPlugin] // ✅ ADD LABEL PLUGIN
     });
 
     analyze(y1);
@@ -193,7 +213,7 @@ function plot() {
             text: graphTitle
           },
 
-          zoom: {
+          zoom: type === "pie" ? {} : {
             zoom: {
               wheel: { enabled: true },
               pinch: { enabled: true },
