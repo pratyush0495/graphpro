@@ -9,7 +9,7 @@ function generateColors(n) {
   return colors;
 }
 
-// ✅ NEW: SMART LABEL DRAW (INSIDE / OUTSIDE)
+// ✅ SMART LABEL DRAW
 const pieLabelPlugin = {
   id: "pieLabelPlugin",
   afterDatasetsDraw(chart) {
@@ -119,54 +119,70 @@ function plot() {
 
   let datasets = [];
 
-  // ✅ FIXED PIE (Y1 + Y2 BOTH)
+  // ================= PIE FIX =================
   if (type === "pie") {
 
-    let data = [];
-    let labels = [];
+    // 🔥 CLEAR OLD CHART AREA
+    let container = document.getElementById("chart").parentNode;
+    container.innerHTML = "";
 
-    // 🔥 Merge Y1 + Y2 into slices
-    y1.forEach((v, i) => {
-      data.push(v);
-      labels.push(`Y1-${x[i] ?? i}`);
-    });
+    // ---------- Y1 PIE ----------
+    if (y1.length) {
+      let canvas1 = document.createElement("canvas");
+      container.appendChild(canvas1);
 
-    if (y2.length === y1.length && y2.some(v => !isNaN(v))) {
-      y2.forEach((v, i) => {
-        data.push(v);
-        labels.push(`Y2-${x[i] ?? i}`);
+      new Chart(canvas1, {
+        type: "pie",
+        data: {
+          labels: x.length === y1.length ? x : y1.map((_, i) => `Item ${i + 1}`),
+          datasets: [{
+            data: y1,
+            backgroundColor: generateColors(y1.length)
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: {
+              display: true,
+              text: graphTitle + " (Y1)"
+            },
+            legend: { position: "bottom" }
+          }
+        },
+        plugins: [pieLabelPlugin]
       });
     }
 
-    datasets = [{
-      data: data,
-      backgroundColor: generateColors(data.length)
-    }];
+    // ---------- Y2 PIE ----------
+    if (y2.length) {
+      let canvas2 = document.createElement("canvas");
+      container.appendChild(canvas2);
 
-    chart = new Chart(document.getElementById("chart"), {
-      type: "pie",
-      data: {
-        labels: labels,
-        datasets: datasets
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-
-        plugins: {
-          title: {
-            display: graphTitle !== "",
-            text: graphTitle
-          },
-          legend: {
-            position: "bottom"
+      new Chart(canvas2, {
+        type: "pie",
+        data: {
+          labels: x.length === y2.length ? x : y2.map((_, i) => `Item ${i + 1}`),
+          datasets: [{
+            data: y2,
+            backgroundColor: generateColors(y2.length)
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: {
+              display: true,
+              text: graphTitle + " (Y2)"
+            },
+            legend: { position: "bottom" }
           }
-        }
-      },
-      plugins: [pieLabelPlugin]
-    });
+        },
+        plugins: [pieLabelPlugin]
+      });
+    }
 
-    analyze(data);
+    analyze(y1);
     return;
   }
 
@@ -203,13 +219,24 @@ function plot() {
         responsive: true,
         maintainAspectRatio: false,
 
+        scales: {
+          x: {
+            display: true,
+            title: { display: true, text: "X Axis" }
+          },
+          y: {
+            display: true,
+            title: { display: true, text: "Y Axis" }
+          }
+        },
+
         plugins: {
           title: {
             display: graphTitle !== "",
             text: graphTitle
           },
 
-          zoom: type === "pie" ? {} : {
+          zoom: {
             zoom: {
               wheel: { enabled: true },
               pinch: { enabled: true },
@@ -218,22 +245,6 @@ function plot() {
             pan: {
               enabled: true,
               mode: 'xy'
-            }
-          }
-        },
-
-        // ✅ AXIS LABELS BACK
-        scales: type === "pie" ? {} : {
-          x: {
-            title: {
-              display: true,
-              text: "X Axis"
-            }
-          },
-          y: {
-            title: {
-              display: true,
-              text: "Y Axis"
             }
           }
         }
@@ -260,6 +271,6 @@ function analyze(y) {
 function download() {
   let link = document.createElement("a");
   link.download = "graph.png";
-  link.href = document.getElementById("chart").toDataURL();
+  link.href = document.querySelector("canvas").toDataURL();
   link.click();
 }
