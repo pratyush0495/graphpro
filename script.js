@@ -9,7 +9,7 @@ function generateColors(n) {
   return colors;
 }
 
-// ✅ SMART LABEL DRAW (IMPROVED)
+// ✅ SMART LABEL DRAW
 const pieLabelPlugin = {
   id: "pieLabelPlugin",
   afterDatasetsDraw(chart) {
@@ -25,14 +25,12 @@ const pieLabelPlugin = {
 
     meta.data.forEach((arc, i) => {
       let value = chart.data.datasets[0].data[i];
-
       if (value === 0 || isNaN(value)) return;
 
       let angle = (arc.startAngle + arc.endAngle) / 2;
       let radius = arc.outerRadius;
 
       let isBigSlice = arc.circumference > 0.4;
-
       let distance = isBigSlice ? radius * 0.6 : radius * 1.15;
 
       let x = arc.x + Math.cos(angle) * distance;
@@ -94,12 +92,36 @@ function plot() {
     y2 = document.getElementById("y2Values").value.split(",").map(Number).filter(n => !isNaN(n));
   }
 
+  // ================= FUNCTION MODE UPGRADE =================
   else {
     let expr = document.getElementById("func").value;
 
+    // 🔥 CUSTOM FUNCTIONS ADD
+    const scope = {
+      sin: x => Math.sin(x),
+      cos: x => Math.cos(x),
+      tan: x => Math.tan(x),
+
+      sec: x => 1 / Math.cos(x),
+      cosec: x => 1 / Math.sin(x),
+      cot: x => 1 / Math.tan(x),
+
+      asin: x => Math.asin(x),
+      acos: x => Math.acos(x),
+      atan: x => Math.atan(x),
+
+      abs: x => Math.abs(x),
+      floor: x => Math.floor(x),
+      ceil: x => Math.ceil(x),
+
+      sgn: x => (x > 0 ? 1 : x < 0 ? -1 : 0)
+    };
+
+    // 🔥 SYMBOL REPLACEMENTS
     expr = expr
       .replace(/\|x\|/g, "abs(x)")
-      .replace(/\[x\]/g, "floor(x)");
+      .replace(/⌊x⌋/g, "floor(x)")
+      .replace(/sgn\(x\)/g, "sgn(x)");
 
     if (type === "pie") {
       alert("Pie not supported");
@@ -108,8 +130,10 @@ function plot() {
 
     for (let i = -20; i <= 20; i += 0.1) {
       try {
-        let val = math.evaluate(expr, { x: i });
+        let val = math.evaluate(expr, { x: i, ...scope });
+
         if (!isFinite(val)) continue;
+
         x.push(i);
         y1.push(val);
       } catch {
@@ -123,15 +147,13 @@ function plot() {
 
   let datasets = [];
 
-  // ================= PIE FIX =================
+  // ================= PIE (UNCHANGED) =================
   if (type === "pie") {
 
     let container = document.getElementById("chart").parentNode;
 
-    // 🔥 CLEAR
     container.innerHTML = "";
 
-    // 🔥 DYNAMIC GRID (FIXED EMPTY SPACE + OVERLAP)
     let chartCount = 0;
     if (y1.length) chartCount++;
     if (y2.length && y2.some(v => !isNaN(v))) chartCount++;
@@ -149,14 +171,11 @@ function plot() {
     function createPie(data, labelText) {
 
       let cleanData = data.filter(v => !isNaN(v) && v !== 0);
-
       if (!cleanData.length) return;
 
       let wrapper = document.createElement("div");
-
       wrapper.style.width = "300px";
       wrapper.style.height = "300px";
-      wrapper.style.position = "relative";
 
       let canvas = document.createElement("canvas");
       wrapper.appendChild(canvas);
@@ -165,10 +184,7 @@ function plot() {
       new Chart(canvas, {
         type: "pie",
         data: {
-          labels: x.length === data.length
-            ? x
-            : cleanData.map((_, i) => `Item ${i + 1}`),
-
+          labels: x.length === data.length ? x : cleanData.map((_, i) => `Item ${i + 1}`),
           datasets: [{
             data: cleanData,
             backgroundColor: generateColors(cleanData.length)
@@ -177,7 +193,6 @@ function plot() {
         options: {
           responsive: true,
           maintainAspectRatio: false,
-
           plugins: {
             title: {
               display: true,
@@ -234,14 +249,8 @@ function plot() {
         maintainAspectRatio: false,
 
         scales: {
-          x: {
-            display: true,
-            title: { display: true, text: "X Axis" }
-          },
-          y: {
-            display: true,
-            title: { display: true, text: "Y Axis" }
-          }
+          x: { display: true, title: { display: true, text: "X Axis" } },
+          y: { display: true, title: { display: true, text: "Y Axis" } }
         },
 
         plugins: {
