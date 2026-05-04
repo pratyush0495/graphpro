@@ -86,17 +86,18 @@ function plot() {
 
   let x = [], y1 = [], y2 = [];
 
+  // ✅ DATA MODE (UNCHANGED — EXACT SAME)
   if (mode === "data") {
     x = document.getElementById("xValues").value.split(",").map(Number).filter(n => !isNaN(n));
     y1 = document.getElementById("yValues").value.split(",").map(Number).filter(n => !isNaN(n));
     y2 = document.getElementById("y2Values").value.split(",").map(Number).filter(n => !isNaN(n));
   }
 
-  // ================= FUNCTION MODE UPGRADE =================
+  // ✅ FUNCTION MODE (ONLY THIS PART UPGRADED)
   else {
     let expr = document.getElementById("func").value;
 
-    // 🔥 CUSTOM FUNCTIONS ADD
+    // 🔥 ADD CUSTOM FUNCTIONS
     const scope = {
       sin: x => Math.sin(x),
       cos: x => Math.cos(x),
@@ -112,16 +113,14 @@ function plot() {
 
       abs: x => Math.abs(x),
       floor: x => Math.floor(x),
-      ceil: x => Math.ceil(x),
 
       sgn: x => (x > 0 ? 1 : x < 0 ? -1 : 0)
     };
 
-    // 🔥 SYMBOL REPLACEMENTS
+    // 🔥 SYMBOL SUPPORT
     expr = expr
       .replace(/\|x\|/g, "abs(x)")
-      .replace(/⌊x⌋/g, "floor(x)")
-      .replace(/sgn\(x\)/g, "sgn(x)");
+      .replace(/⌊x⌋/g, "floor(x)");
 
     if (type === "pie") {
       alert("Pie not supported");
@@ -215,7 +214,7 @@ function plot() {
     return;
   }
 
-  // ---------- OTHER CHARTS ----------
+  // ---------- OTHER CHARTS (UNCHANGED) ----------
   else {
 
     datasets.push({
