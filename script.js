@@ -86,18 +86,17 @@ function plot() {
 
   let x = [], y1 = [], y2 = [];
 
-  // ✅ DATA MODE (UNCHANGED — EXACT SAME)
+  // ✅ DATA MODE (UNCHANGED)
   if (mode === "data") {
     x = document.getElementById("xValues").value.split(",").map(Number).filter(n => !isNaN(n));
     y1 = document.getElementById("yValues").value.split(",").map(Number).filter(n => !isNaN(n));
     y2 = document.getElementById("y2Values").value.split(",").map(Number).filter(n => !isNaN(n));
   }
 
-  // ✅ FUNCTION MODE (ONLY THIS PART UPGRADED)
+  // ✅ FUNCTION MODE (FIXED)
   else {
     let expr = document.getElementById("func").value;
 
-    // 🔥 ADD CUSTOM FUNCTIONS
     const scope = {
       sin: x => Math.sin(x),
       cos: x => Math.cos(x),
@@ -117,7 +116,6 @@ function plot() {
       sgn: x => (x > 0 ? 1 : x < 0 ? -1 : 0)
     };
 
-    // 🔥 SYMBOL SUPPORT
     expr = expr
       .replace(/\|x\|/g, "abs(x)")
       .replace(/⌊x⌋/g, "floor(x)");
@@ -127,14 +125,31 @@ function plot() {
       return;
     }
 
+    let prevValid = true;
+
     for (let i = -20; i <= 20; i += 0.1) {
       try {
         let val = math.evaluate(expr, { x: i, ...scope });
 
-        if (!isFinite(val)) continue;
+        // 🔥 HARD FILTER
+        if (!isFinite(val) || Math.abs(val) > 50) {
+          x.push(i);
+          y1.push(null); // break line
+          prevValid = false;
+          continue;
+        }
+
+        // 🔥 DISCONTINUITY BREAK
+        if (!prevValid) {
+          x.push(i);
+          y1.push(null);
+        }
 
         x.push(i);
         y1.push(val);
+
+        prevValid = true;
+
       } catch {
         alert("Invalid function");
         return;
@@ -148,9 +163,7 @@ function plot() {
 
   // ================= PIE (UNCHANGED) =================
   if (type === "pie") {
-
     let container = document.getElementById("chart").parentNode;
-
     container.innerHTML = "";
 
     let chartCount = 0;
@@ -161,14 +174,9 @@ function plot() {
     container.style.justifyContent = "center";
     container.style.gap = "20px";
 
-    if (chartCount === 1) {
-      container.style.gridTemplateColumns = "300px";
-    } else {
-      container.style.gridTemplateColumns = "repeat(2, 300px)";
-    }
+    container.style.gridTemplateColumns = chartCount === 1 ? "300px" : "repeat(2, 300px)";
 
     function createPie(data, labelText) {
-
       let cleanData = data.filter(v => !isNaN(v) && v !== 0);
       if (!cleanData.length) return;
 
@@ -205,17 +213,17 @@ function plot() {
     }
 
     if (y1.length) createPie(y1, "Y1");
-
-    if (y2.length && y2.some(v => !isNaN(v))) {
-      createPie(y2, "Y2");
-    }
+    if (y2.length && y2.some(v => !isNaN(v))) createPie(y2, "Y2");
 
     analyze(y1);
     return;
   }
 
-  // ---------- OTHER CHARTS (UNCHANGED) ----------
+  // ---------- OTHER CHARTS ----------
   else {
+
+    let isStep = document.getElementById("func").value.includes("floor") ||
+                 document.getElementById("func").value.includes("sgn");
 
     datasets.push({
       label: "Y1",
@@ -223,7 +231,8 @@ function plot() {
         ? x.map((v, i) => ({ x: v, y: y1[i] }))
         : y1,
       borderColor: document.getElementById("color1").value,
-      backgroundColor: document.getElementById("color1").value
+      backgroundColor: document.getElementById("color1").value,
+      stepped: isStep ? true : false
     });
 
     if (mode === "data" && y2.length === y1.length && y2.some(v => !isNaN(v))) {
@@ -246,6 +255,7 @@ function plot() {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        spanGaps: false, // 🔥 IMPORTANT FIX
 
         scales: {
           x: { display: true, title: { display: true, text: "X Axis" } },
@@ -257,7 +267,6 @@ function plot() {
             display: graphTitle !== "",
             text: graphTitle
           },
-
           zoom: {
             zoom: {
               wheel: { enabled: true },
@@ -277,13 +286,14 @@ function plot() {
   }
 }
 
-// ---------- ANALYSIS ----------
+// ---------- ANALYSIS (FIXED) ----------
 function analyze(y) {
-  if (!y.length) return;
+  let clean = y.filter(v => v !== null && isFinite(v) && Math.abs(v) < 50);
+  if (!clean.length) return;
 
-  let max = Math.max(...y);
-  let min = Math.min(...y);
-  let avg = (y.reduce((a, b) => a + b, 0) / y.length).toFixed(2);
+  let max = Math.max(...clean);
+  let min = Math.min(...clean);
+  let avg = (clean.reduce((a, b) => a + b, 0) / clean.length).toFixed(2);
 
   document.getElementById("insight").innerHTML =
     `Max: ${max}<br>Min: ${min}<br>Avg: ${avg}`;
